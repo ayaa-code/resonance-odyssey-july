@@ -5408,7 +5408,7 @@ Jika tidak ada energi yang hilang (ideal), pernyataan yang benar adalah …</div
             title.style.color = correct ? '#22c55e' : '#dc2626';
             summary.innerText = correct ? 'Luar biasa! Kamu memahami konsepnya.' : 'Coba cek lagi pemahamanmu.';
             summary.style.color = correct ? '#166534' : '#991b1b';
-            explanation.innerText = `${baseExplanation} Ini feedback singkat supaya proses belajar tetap terasa jelas.`;
+            explanation.innerText = baseExplanation;
             nextBtn.innerText = 'LANJUT';
             nextBtn.onclick = () => {
                 hideAnswerPopup();

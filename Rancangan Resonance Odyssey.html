@@ -227,24 +227,6 @@
             margin: 0;
         }
 
-        .stamina-info {
-            text-align: right;
-        }
-
-        .stamina-label {
-            font-size: clamp(7px, 1.5vw, 9px);
-            font-weight: bold;
-            color: #FFB6D9;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: clamp(2px, 1vw, 4px);
-        }
-
-        #life-icons {
-            font-size: clamp(18px, 4vw, 24px);
-            letter-spacing: clamp(1px, 0.5vw, 2px);
-        }
-
         .game-main {
             flex-grow: 1;
             display: flex;
@@ -462,7 +444,15 @@
             font-weight: bold;
             font-style: italic;
             line-height: 1.3;
-            margin-bottom: clamp(20px, 4vw, 30px);
+            margin-bottom: clamp(12px, 2.5vw, 18px);
+        }
+
+        #quiz-timer {
+            margin-bottom: clamp(12px, 2.5vw, 18px);
+            font-size: clamp(13px, 2.5vw, 16px);
+            font-weight: 900;
+            color: #dc2626;
+            letter-spacing: 0.5px;
         }
 
         #quiz-options {
@@ -515,10 +505,57 @@
             z-index: 10;
             border-radius: 12px;
             animation: fadeIn 0.3s ease-out;
+            padding: clamp(16px, 4vw, 24px);
         }
 
         #quiz-feedback-box.show {
             display: flex !important;
+        }
+
+        #feedback-icon {
+            font-size: clamp(40px, 10vw, 60px);
+            margin-bottom: clamp(8px, 2vw, 12px);
+        }
+
+        #feedback-title {
+            font-size: clamp(20px, 4.5vw, 28px);
+            font-weight: 900;
+            margin-bottom: clamp(6px, 1.5vw, 10px);
+        }
+
+        #feedback-message {
+            font-size: clamp(13px, 2.5vw, 16px);
+            color: #2C5F7F;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: clamp(8px, 2vw, 12px);
+            line-height: 1.4;
+        }
+
+        #feedback-explanation {
+            font-size: clamp(12px, 2.2vw, 14px);
+            color: #4b5563;
+            text-align: center;
+            line-height: 1.5;
+            margin-bottom: clamp(12px, 3vw, 18px);
+            max-width: 90%;
+        }
+
+        .quiz-next-btn {
+            background: linear-gradient(135deg, #7EC8E3 0%, #A8D8EA 100%);
+            color: #2C5F7F;
+            border: 1px solid rgba(127, 167, 225, 0.32);
+            padding: clamp(10px, 2vw, 12px) clamp(18px, 4vw, 24px);
+            border-radius: 10px;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 3px 0 #5EB3D6;
+            font-size: clamp(13px, 2.5vw, 15px);
+        }
+
+        .quiz-next-btn:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, #A8D8EA 0%, #C8E6F5 100%);
         }
 
         @keyframes fadeIn {
@@ -1024,8 +1061,8 @@
             <ul>
                 <li>Gunakan tombol arah untuk berjalan mengelilingi Nusantara.</li>
                 <li>Setiap wilayah baru akan memberikan tantangan musik daerah tersebut.</li>
-                <li>Jawaban benar menjaga staminamu, jawaban salah akan menguranginya.</li>
-                <li>Tujuanmu adalah mengunjungi seluruh wilayah sebelum stamina habis.</li>
+                <li>Jawaban benar akan membuat perjalananmu semakin lancar.</li>
+                <li>Tujuanmu adalah mengunjungi seluruh wilayah Nusantara.</li>
                 <li>Karakter akan berjalan santai mengikuti arahanmu.</li>
             </ul>
             <button class="btn-gold" onclick="showCharSelect()">NEXT (Pilih Karakter)</button>
@@ -1055,10 +1092,6 @@
                 <div id="current-loc">-</div>
             </div>
         </div>
-        <div class="stamina-info">
-            <div class="stamina-label">Stamina</div>
-            <div id="life-icons">❤️❤️❤️❤️❤️</div>
-        </div>
     </header>
 
     <!-- GAME BOARD -->
@@ -1084,12 +1117,15 @@
         <div class="content-card">
             <div class="quiz-header" id="quiz-header"></div>
             <div class="quiz-question" id="quiz-question"></div>
+            <div id="quiz-timer">Waktu: 10s</div>
             <div id="quiz-options"></div>
             
             <div id="quiz-feedback-box">
                 <div id="feedback-icon"></div>
                 <div id="feedback-title"></div>
                 <div id="feedback-message"></div>
+                <div id="feedback-explanation"></div>
+                <button id="quiz-next-btn" class="quiz-next-btn" type="button">LANJUT</button>
             </div>
         </div>
     </div>
@@ -1132,21 +1168,21 @@
         ];
 
         const cityQuestions = {
-            1: { q: "Musik orkestra Betawi yang dipengaruhi budaya Eropa dan menggunakan alat musik tiup logam disebut?", a: ["Tanjidor", "Gambang Kromong", "Keroncong", "Marawis"], correct: 0 },
-            2: { q: "Alat musik bambu asal Jawa Barat yang dimainkan dengan cara digoyangkan adalah?", a: ["Angklung", "Calung", "Suling", "Kecapi"], correct: 0 },
-            3: { q: "Genre musik khas Cirebon-Indramayu yang namanya singkatan dari 'Gitar' dan 'Suling' adalah?", a: ["Tarling", "Degung", "Sindenan", "Tayub"], correct: 0 },
-            4: { q: "Ansambel musik tradisional Jawa yang didominasi metalofon dan gong disebut?", a: ["Gamelan", "Kulintang", "Talempong", "Sasando"], correct: 0 },
-            5: { q: "Aliran musik yang menggunakan instrumen flute, biola, dan cak-cuk (ukulele) yang populer di Solo adalah?", a: ["Keroncong", "Campursari", "Dangdut", "Langgam"], correct: 0 },
-            6: { q: "Kesenian drama tradisional Jawa Timur yang diiringi musik gamelan bertempo cepat disebut?", a: ["Ludruk", "Ketoprak", "Wayang Orang", "Lenong"], correct: 0 },
-            7: { q: "Musik vokal laki-laki di Bali yang menirukan suara instrumen gamelan tanpa alat musik disebut?", a: ["Kecak", "Jegog", "Genggong", "Barong"], correct: 0 },
-            8: { q: "Alat musik tiup tradisional dari pelepah pohon enau yang ditarik talinya, khas suku Sasak Lombok?", a: ["Genggong", "Seruling", "Nafiri", "Saronen"], correct: 0 },
-            9: { q: "Musik perkusi yang mengiringi tarian komedi penuh energi asal Sulawesi Selatan disebut?", a: ["Gandrang Bulo", "Sinrilik", "Pakarena", "Kacaping"], correct: 0 },
-            10: { q: "Alat musik perkusi kayu yang dipukul dan disusun rapi, khas suku Minahasa di Manado?", a: ["Kolintang", "Gendang", "Tifa", "Rebana"], correct: 0 },
-            11: { q: "Ambon dijuluki 'City of Music'. Alat musik pukul utama yang terbuat dari kayu bulat dan kulit binatang adalah?", a: ["Tifa", "Jimbe", "Bongo", "Bedug"], correct: 0 },
-            12: { q: "Musik religi di Ternate yang menggunakan rebana untuk mengiringi puji-pujian disebut?", a: ["Hadrah", "Samrah", "Qasidah", "Zapin"], correct: 0 },
-            13: { q: "Alat musik petik khas suku Dayak yang bentuk dasarnya mirip gitar tanpa fret adalah?", a: ["Sampe", "Sasando", "Jentreng", "Kecapi"], correct: 0 },
-            14: { q: "Musik khas Kalimantan yang menggunakan alat musik pukul dari logam mirip gamelan disebut?", a: ["Kliningan", "Talempong", "Gamelan Banjar", "Karungut"], correct: 2 },
-            15: { q: "Kesenian Aceh yang memadukan vokal, tepuk tangan, dan bantal kecil sebagai perkusi disebut?", a: ["Didong", "Saman", "Seudati", "Rapa'i"], correct: 0 }
+            1: { q: "Musik orkestra Betawi yang dipengaruhi budaya Eropa dan menggunakan alat musik tiup logam disebut?", a: ["Tanjidor", "Gambang Kromong", "Keroncong", "Marawis"], correct: 0, explanation: "Tanjidor adalah ansambel musik Betawi yang memakai alat tiup logam seperti terompet dan trombone, sehingga jawabannya adalah Tanjidor." },
+            2: { q: "Alat musik bambu asal Jawa Barat yang dimainkan dengan cara digoyangkan adalah?", a: ["Angklung", "Calung", "Suling", "Kecapi"], correct: 0, explanation: "Angklung dimainkan dengan digoyangkan sehingga bunyinya bergoyang dan bergetar, sesuai ciri alat musik khas Sunda." },
+            3: { q: "Genre musik khas Cirebon-Indramayu yang namanya singkatan dari 'Gitar' dan 'Suling' adalah?", a: ["Tarling", "Degung", "Sindenan", "Tayub"], correct: 0, explanation: "Tarling adalah nama musik khas Cirebon-Indramayu yang berasal dari gabungan gitar dan suling." },
+            4: { q: "Ansambel musik tradisional Jawa yang didominasi metalofon dan gong disebut?", a: ["Gamelan", "Kulintang", "Talempong", "Sasando"], correct: 0, explanation: "Gamelan memakai metalofon, gong, dan instrumen tradisional Jawa yang khas, sehingga jawabannya adalah Gamelan." },
+            5: { q: "Aliran musik yang menggunakan instrumen flute, biola, dan cak-cuk (ukulele) yang populer di Solo adalah?", a: ["Keroncong", "Campursari", "Dangdut", "Langgam"], correct: 0, explanation: "Keroncong adalah aliran musik yang sering memakai flute, biola, dan cak-cuk, dan sangat dikenal di daerah Solo." },
+            6: { q: "Kesenian drama tradisional Jawa Timur yang diiringi musik gamelan bertempo cepat disebut?", a: ["Ludruk", "Ketoprak", "Wayang Orang", "Lenong"], correct: 0, explanation: "Ludruk adalah kesenian tradisional Jawa Timur yang dikemas dengan humor, dialog, dan musik gamelan berenergi cepat." },
+            7: { q: "Musik vokal laki-laki di Bali yang menirukan suara instrumen gamelan tanpa alat musik disebut?", a: ["Kecak", "Jegog", "Genggong", "Barong"], correct: 0, explanation: "Kecak adalah seni vokal Bali yang menirukan bunyi gamelan dengan suara manusia, sehingga jawabannya adalah Kecak." },
+            8: { q: "Alat musik tiup tradisional dari pelepah pohon enau yang ditarik talinya, khas suku Sasak Lombok?", a: ["Genggong", "Seruling", "Nafiri", "Saronen"], correct: 0, explanation: "Seruling dari pelepah enau yang ditarik tali adalah alat musik khas Sasak Lombok, sehingga jawabannya adalah Seruling." },
+            9: { q: "Musik perkusi yang mengiringi tarian komedi penuh energi asal Sulawesi Selatan disebut?", a: ["Gandrang Bulo", "Sinrilik", "Pakarena", "Kacaping"], correct: 0, explanation: "Gandrang Bulo adalah musik perkusi khas Sulawesi Selatan yang menemani tarian komedi berenergi tinggi." },
+            10: { q: "Alat musik perkusi kayu yang dipukul dan disusun rapi, khas suku Minahasa di Manado?", a: ["Kolintang", "Gendang", "Tifa", "Rebana"], correct: 0, explanation: "Kolintang adalah alat musik perkusi kayu yang disusun rapi dan sangat terkenal dari Minahasa." },
+            11: { q: "Ambon dijuluki 'City of Music'. Alat musik pukul utama yang terbuat dari kayu bulat dan kulit binatang adalah?", a: ["Tifa", "Jimbe", "Bongo", "Bedug"], correct: 0, explanation: "Tifa adalah alat musik pukul tradisional yang terbuat dari kayu bulat dan kulit binatang, khas wilayah timur Indonesia." },
+            12: { q: "Musik religi di Ternate yang menggunakan rebana untuk mengiringi puji-pujian disebut?", a: ["Hadrah", "Samrah", "Qasidah", "Zapin"], correct: 0, explanation: "Hadrah adalah musik religi yang memakai rebana untuk mengiringi puji-pujian di Ternate." },
+            13: { q: "Alat musik petik khas suku Dayak yang bentuk dasarnya mirip gitar tanpa fret adalah?", a: ["Sampe", "Sasando", "Jentreng", "Kecapi"], correct: 0, explanation: "Sampe adalah alat musik petik khas Dayak yang bentuknya mirip gitar namun tanpa fret." },
+            14: { q: "Musik khas Kalimantan yang menggunakan alat musik pukul dari logam mirip gamelan disebut?", a: ["Kliningan", "Talempong", "Gamelan Banjar", "Karungut"], correct: 2, explanation: "Gamelan Banjar adalah musik khas Kalimantan yang memakai alat pukul logam mirip gamelan, sehingga jawabannya adalah Gamelan Banjar." },
+            15: { q: "Kesenian Aceh yang memadukan vokal, tepuk tangan, dan bantal kecil sebagai perkusi disebut?", a: ["Didong", "Saman", "Seudati", "Rapa'i"], correct: 0, explanation: "Saman adalah kesenian Aceh yang menampilkan vokal, tepuk tangan, dan gerakan serempak yang sangat khas." }
         };
 
         const gridCoords = [
@@ -1159,7 +1195,6 @@
         let state = {
             playerName: '',
             idx: 0,
-            lives: 5,
             charId: '',
             active: false,
             isMoving: false,
@@ -1168,10 +1203,13 @@
             autoMode: false,
             autoPaused: false,
             autoTimer: null,
-            currentAudio: null
+            currentAudio: null,
+            quizTimer: null,
+            quizTimeLeft: 0
         };
         
         const TRAVEL_DURATION = 5000; // 5 seconds untuk perjalanan (agar musik bisa dimainkan)
+        const QUIZ_TIME_LIMIT = 10;
 
         let audioContext = null;
 
@@ -1300,7 +1338,6 @@
             token.style.left = `${centerX}%`;
             token.style.top = `${centerY}%`;
             
-            document.getElementById('life-icons').innerText = "❤️".repeat(Math.max(0, state.lives));
             document.getElementById('current-loc').innerText = cityData[state.idx].name;
             
             document.querySelectorAll('.tile').forEach(t => t.style.boxShadow = '');
@@ -1457,6 +1494,12 @@
                 return;
             }
 
+            if (state.quizTimer) {
+                clearInterval(state.quizTimer);
+            }
+            state.quizTimeLeft = QUIZ_TIME_LIMIT;
+            updateQuizTimer();
+
             const overlay = document.getElementById('quiz-overlay');
             document.getElementById('quiz-header').innerText = `TANTANGAN MUSIK: ${cityData[state.idx].name}`;
             document.getElementById('quiz-question').innerText = state.currentQuiz.q;
@@ -1475,15 +1518,39 @@
             });
             
             overlay.classList.add('show');
+
+            state.quizTimer = setInterval(() => {
+                state.quizTimeLeft -= 1;
+                updateQuizTimer();
+                if (state.quizTimeLeft <= 0) {
+                    clearInterval(state.quizTimer);
+                    state.quizTimer = null;
+                    checkAns(false, true);
+                }
+            }, 1000);
         }
 
-        function checkAns(correct) {
+        function updateQuizTimer() {
+            const timerEl = document.getElementById('quiz-timer');
+            if (!timerEl) return;
+            timerEl.innerText = `Waktu: ${state.quizTimeLeft}s`;
+            timerEl.style.color = state.quizTimeLeft <= 3 ? '#dc2626' : '#2C5F7F';
+        }
+
+        function checkAns(correct, timedOut = false) {
+            if (state.quizTimer) {
+                clearInterval(state.quizTimer);
+                state.quizTimer = null;
+            }
+
             document.querySelectorAll('.quiz-opt-btn').forEach(b => b.disabled = true);
             
             const feedbackBox = document.getElementById('quiz-feedback-box');
             const icon = document.getElementById('feedback-icon');
             const title = document.getElementById('feedback-title');
             const message = document.getElementById('feedback-message');
+            const explanation = document.getElementById('feedback-explanation');
+            const nextBtn = document.getElementById('quiz-next-btn');
             
             feedbackBox.classList.add('show');
 
@@ -1492,43 +1559,40 @@
                 icon.innerText = "✅";
                 title.innerText = "BENAR!";
                 title.style.color = '#22c55e';
-                message.innerText = "Luar biasa! Pengetahuan musikmu sangat luas.";
-                message.style.color = '#667eea';
+                message.innerText = `Jawabanmu benar: ${state.currentQuiz.a[state.currentQuiz.correct]}`;
+                message.style.color = '#22c55e';
+                explanation.innerText = state.currentQuiz.explanation || 'Penjelasan belum tersedia.';
             } else {
                 playSound(98, 0.2);
-                state.lives--;
                 icon.innerText = "❌";
-                title.innerText = "SALAH!";
+                title.innerText = timedOut ? "WAKTU HABIS!" : "SALAH!";
                 title.style.color = '#dc2626';
-                message.innerText = `Jawaban yang benar adalah: ${state.currentQuiz.a[state.currentQuiz.correct]}`;
+                message.innerText = timedOut
+                    ? `Waktu habis. Jawaban yang benar adalah: ${state.currentQuiz.a[state.currentQuiz.correct]}`
+                    : `Jawaban yang benar adalah: ${state.currentQuiz.a[state.currentQuiz.correct]}`;
                 message.style.color = '#dc2626';
+                explanation.innerText = state.currentQuiz.explanation || 'Penjelasan belum tersedia.';
                 
                 const board = document.getElementById('board');
                 board.classList.add('shake');
                 setTimeout(() => board.classList.remove('shake'), 400);
             }
 
-            setTimeout(() => {
+            nextBtn.onclick = () => {
                 document.getElementById('quiz-overlay').classList.remove('show');
+                document.getElementById('quiz-feedback-box').classList.remove('show');
                 state.isMoving = false;
-                if (state.lives <= 0) {
-                    finish(false);
-                } else if (state.visited.size === cityData.length) {
+                if (state.visited.size === cityData.length) {
                     finish(true);
                 }
                 updateTokenPos();
-                // resume auto if it was running before quiz
                 if (state.autoMode) {
                     state.autoPaused = false;
-                    // schedule next step
                     if (state.autoTimer) clearTimeout(state.autoTimer);
                     state.autoTimer = setTimeout(autoStep, 300);
-                } else {
-                    // tidak dalam auto mode, tapi kirim untuk mulai perjalanan berikutnya
-                    // (user akan klik tombol kanan)
                 }
                 updateControlButtons();
-            }, 2000);
+            };
         }
 
         function finish(win) {
@@ -1540,8 +1604,8 @@
                 document.getElementById('end-message').innerText = `Selamat, ${state.playerName}! Kamu telah menjelajahi seluruh simfoni Nusantara.`;
                 document.getElementById('end-title').style.color = '#22c55e';
             } else {
-                document.getElementById('end-title').innerText = "💀 HARMONI TERHENTI";
-                document.getElementById('end-message').innerText = "Stamina habis. Pelajari lagi kekayaan musik Nusantara dan coba lagi!";
+                document.getElementById('end-title').innerText = "🎭 PERJALANAN SELESAI";
+                document.getElementById('end-message').innerText = "Kamu telah menyelesaikan perjalanan ini. Coba lagi untuk pengalaman yang berbeda!";
                 document.getElementById('end-title').style.color = '#dc2626';
             }
             

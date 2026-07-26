@@ -1393,9 +1393,64 @@
             display: flex !important;
         }
 
+        .answer-feedback-modal {
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.72);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: clamp(16px, 3vw, 24px);
+            z-index: 30;
+            border-radius: 18px;
+        }
+
+        .answer-feedback-modal.show {
+            display: flex;
+        }
+
+        .answer-feedback-card {
+            width: min(460px, 100%);
+            max-height: min(82vh, 520px);
+            background: linear-gradient(135deg, #ffffff 0%, #f4f8ff 100%);
+            border: 2px solid #7fa7e1;
+            border-radius: 18px;
+            padding: clamp(18px, 3vw, 24px);
+            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.24);
+            text-align: center;
+            color: var(--dark-outline);
+            overflow-y: auto;
+        }
+
+        .feedback-result-icon {
+            font-size: clamp(36px, 6vw, 48px);
+            margin-bottom: 8px;
+        }
+
+        .feedback-result-title {
+            font-size: clamp(22px, 4vw, 28px);
+            font-weight: 900;
+            margin-bottom: 10px;
+            letter-spacing: 0.04em;
+        }
+
+        .feedback-result-summary {
+            font-size: clamp(15px, 2.8vw, 18px);
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .feedback-result-explanation {
+            font-size: clamp(12px, 2.4vw, 14px);
+            line-height: 1.6;
+            margin-bottom: 16px;
+            color: #334155;
+        }
+
         /* Quiz Cards Overlay */
         #quiz-cards-overlay {
             display: none;
+            position: relative;
         }
 
         #quiz-cards-overlay.show {
@@ -3760,6 +3815,16 @@
             </div>
             <button class="btn-gold" id="continue-to-quiz-btn" style="display:none;">Lanjut ke Tantangan</button>
         </div>
+
+        <div id="answer-feedback-modal" class="answer-feedback-modal" aria-live="polite">
+            <div class="answer-feedback-card">
+                <div id="feedback-result-icon" class="feedback-result-icon">✅</div>
+                <div id="feedback-result-title" class="feedback-result-title">BENAR!</div>
+                <div id="feedback-result-summary" class="feedback-result-summary"></div>
+                <div id="feedback-result-explanation" class="feedback-result-explanation"></div>
+                <button id="feedback-next-btn" class="btn-gold">LANJUT</button>
+            </div>
+        </div>
     </div>
 
     <!-- QUIZ OVERLAY -->
@@ -5310,8 +5375,66 @@ Jika tidak ada energi yang hilang (ideal), pernyataan yang benar adalah …</div
             overlay.classList.add('show');
 
             // Reset state kartu
+            hideAnswerFeedbackModal();
             state.card3Answered = false;
             state.card4Answered = false;
+        }
+
+        function hideAnswerFeedbackModal() {
+            const modal = document.getElementById('answer-feedback-modal');
+            if (modal) {
+                modal.classList.remove('show');
+            }
+        }
+
+        function showAnswerFeedbackModal(cardNum, correct, selectedLabel, correctLabel) {
+            const modal = document.getElementById('answer-feedback-modal');
+            const icon = document.getElementById('feedback-result-icon');
+            const title = document.getElementById('feedback-result-title');
+            const summary = document.getElementById('feedback-result-summary');
+            const explanation = document.getElementById('feedback-result-explanation');
+            const nextBtn = document.getElementById('feedback-next-btn');
+
+            if (!modal || !icon || !title || !summary || !explanation || !nextBtn) return;
+
+            const regionName = state.idx > 0 ? cityData[state.idx].name : 'wilayah ini';
+            const cardLabel = cardNum === 3 ? 'soal pertama' : 'soal kedua';
+            const baseExplanation = correct
+                ? `Jawabanmu tepat. Pada ${regionName}, pilihan "${correctLabel}" sesuai dengan konsep yang ditanyakan pada ${cardLabel}.`
+                : `Jawabanmu belum tepat. ${selectedLabel ? `Pilihan "${selectedLabel}" belum sesuai.` : 'Pilihan yang kamu pilih belum sesuai.'} Jawaban yang benar adalah "${correctLabel}".`;
+
+            icon.innerText = correct ? '✅' : '❌';
+            title.innerText = correct ? 'BENAR!' : 'SALAH!';
+            title.style.color = correct ? '#22c55e' : '#dc2626';
+            summary.innerText = correct ? 'Luar biasa! Kamu memahami konsepnya.' : 'Coba lihat kembali alasan yang benar.';
+            summary.style.color = correct ? '#166534' : '#991b1b';
+            explanation.innerText = `${baseExplanation} Penjelasan singkat: soal ini menilai penalaranmu tentang bunyi dan karakteristik alat musik khas wilayah tersebut.`;
+            nextBtn.innerText = 'LANJUT';
+            nextBtn.onclick = () => {
+                hideAnswerFeedbackModal();
+                if (cardNum === 3) {
+                    const options4 = document.getElementById('options-4');
+                    if (options4) {
+                        options4.querySelectorAll('button').forEach(btn => btn.disabled = false);
+                    }
+                } else {
+                    document.getElementById('quiz-cards-overlay').classList.remove('show');
+                    state.isMoving = false;
+                    showBoardToken();
+                    if (state.visited.size === cityData.length) {
+                        finish(true);
+                    }
+                    updateTokenPos();
+                    if (state.autoMode) {
+                        state.autoPaused = false;
+                        if (state.autoTimer) clearTimeout(state.autoTimer);
+                        state.autoTimer = setTimeout(autoStep, 300);
+                    }
+                    updateControlButtons();
+                }
+            };
+
+            modal.classList.add('show');
         }
 
         function checkCardAnswer(cardNum, correct, selectedButton) {
@@ -5319,6 +5442,8 @@ Jika tidak ada energi yang hilang (ideal), pernyataan yang benar adalah …</div
             const cityName = cityData[questionId].name;
             const options = document.getElementById(`options-${cardNum}`);
             const correctIndex = Number(options.dataset.correctIndex);
+            const selectedLabel = selectedButton ? selectedButton.innerText : '';
+            const correctLabel = options.querySelectorAll('button')[correctIndex]?.innerText || '';
             
             // Record jawaban
             state.answers.push({
@@ -5346,35 +5471,20 @@ Jika tidak ada energi yang hilang (ideal), pernyataan yang benar adalah …</div
             } else {
                 card.style.borderColor = '#dc2626';
                 playSound(98, 0.2);
-                // lives feature removed
             }
             
             // Jika kartu 3 dijawab, unlock kartu 4
             if (cardNum === 3) {
                 state.card3Answered = true;
-                document.getElementById('options-4').querySelectorAll('button').forEach(btn => btn.disabled = false);
+                const options4 = document.getElementById('options-4');
+                if (options4) {
+                    options4.querySelectorAll('button').forEach(btn => btn.disabled = false);
+                }
             } else if (cardNum === 4) {
                 state.card4Answered = true;
-                // Setelah kedua kartu dijawab, lanjut
-                setTimeout(() => {
-                    document.getElementById('quiz-cards-overlay').classList.remove('show');
-                    state.isMoving = false;
-                    // kembalikan token papan setelah kartu selesai
-                    showBoardToken();
-                    // If finished visiting all cities, show finish
-                    if (state.visited.size === cityData.length) {
-                        finish(true);
-                    }
-                    updateTokenPos();
-                    // resume auto if it was running before quiz
-                    if (state.autoMode) {
-                        state.autoPaused = false;
-                        if (state.autoTimer) clearTimeout(state.autoTimer);
-                        state.autoTimer = setTimeout(autoStep, 300);
-                    }
-                    updateControlButtons();
-                }, 2000);
             }
+
+            showAnswerFeedbackModal(cardNum, correct, selectedLabel, correctLabel);
         }
 
         function showAdventureInstructions() {

@@ -1393,6 +1393,61 @@
             display: flex !important;
         }
 
+        .answer-popup-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.72);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: clamp(16px, 3vw, 24px);
+            z-index: 2147483647;
+            pointer-events: none;
+        }
+
+        .answer-popup-overlay.show {
+            display: flex;
+            pointer-events: auto;
+        }
+
+        .answer-popup-card {
+            width: min(460px, 100%);
+            max-height: min(82vh, 520px);
+            background: linear-gradient(135deg, #ffffff 0%, #f4f8ff 100%);
+            border: 2px solid #7fa7e1;
+            border-radius: 18px;
+            padding: clamp(18px, 3vw, 24px);
+            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.24);
+            text-align: center;
+            color: var(--dark-outline);
+            overflow-y: auto;
+        }
+
+        .answer-popup-icon {
+            font-size: clamp(36px, 6vw, 48px);
+            margin-bottom: 8px;
+        }
+
+        .answer-popup-title {
+            font-size: clamp(22px, 4vw, 28px);
+            font-weight: 900;
+            margin-bottom: 8px;
+            letter-spacing: 0.04em;
+        }
+
+        .answer-popup-summary {
+            font-size: clamp(15px, 2.8vw, 18px);
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .answer-popup-explanation {
+            font-size: clamp(12px, 2.4vw, 14px);
+            line-height: 1.6;
+            margin-bottom: 16px;
+            color: #334155;
+        }
+
         /* Quiz Cards Overlay */
         #quiz-cards-overlay {
             display: none;
@@ -3762,6 +3817,16 @@
         </div>
     </div>
 
+    <div id="answer-popup-overlay" class="answer-popup-overlay" aria-live="polite">
+        <div class="answer-popup-card">
+            <div id="answer-popup-icon" class="answer-popup-icon">✅</div>
+            <div id="answer-popup-title" class="answer-popup-title">BENAR!</div>
+            <div id="answer-popup-summary" class="answer-popup-summary"></div>
+            <div id="answer-popup-explanation" class="answer-popup-explanation"></div>
+            <button id="answer-popup-next-btn" class="btn-gold">LANJUT</button>
+        </div>
+    </div>
+
     <!-- QUIZ OVERLAY -->
     <div id="quiz-overlay" class="screen-overlay">
         <div class="content-card">
@@ -5310,8 +5375,66 @@ Jika tidak ada energi yang hilang (ideal), pernyataan yang benar adalah …</div
             overlay.classList.add('show');
 
             // Reset state kartu
+            hideAnswerPopup();
             state.card3Answered = false;
             state.card4Answered = false;
+        }
+
+        function hideAnswerPopup() {
+            const popup = document.getElementById('answer-popup-overlay');
+            if (popup) {
+                popup.classList.remove('show');
+            }
+        }
+
+        function showAnswerPopup(cardNum, correct, selectedLabel, correctLabel) {
+            const popup = document.getElementById('answer-popup-overlay');
+            const icon = document.getElementById('answer-popup-icon');
+            const title = document.getElementById('answer-popup-title');
+            const summary = document.getElementById('answer-popup-summary');
+            const explanation = document.getElementById('answer-popup-explanation');
+            const nextBtn = document.getElementById('answer-popup-next-btn');
+
+            if (!popup || !icon || !title || !summary || !explanation || !nextBtn) return;
+
+            const regionName = state.idx > 0 ? cityData[state.idx].name : 'wilayah ini';
+            const cardLabel = cardNum === 3 ? 'soal pertama' : 'soal kedua';
+            const baseExplanation = correct
+                ? `Jawabanmu benar. Pada ${regionName}, pilihan "${correctLabel}" sesuai dengan konsep yang ditanyakan pada ${cardLabel}.`
+                : `Jawabanmu belum tepat. Pilihan "${selectedLabel}" belum sesuai. Jawaban yang benar adalah "${correctLabel}".`;
+
+            icon.innerText = correct ? '✅' : '❌';
+            title.innerText = correct ? 'BENAR!' : 'SALAH!';
+            title.style.color = correct ? '#22c55e' : '#dc2626';
+            summary.innerText = correct ? 'Luar biasa! Kamu memahami konsepnya.' : 'Coba cek lagi pemahamanmu.';
+            summary.style.color = correct ? '#166534' : '#991b1b';
+            explanation.innerText = `${baseExplanation} Ini feedback singkat supaya proses belajar tetap terasa jelas.`;
+            nextBtn.innerText = 'LANJUT';
+            nextBtn.onclick = () => {
+                hideAnswerPopup();
+                if (cardNum === 3) {
+                    const options4 = document.getElementById('options-4');
+                    if (options4) {
+                        options4.querySelectorAll('button').forEach(btn => btn.disabled = false);
+                    }
+                } else {
+                    document.getElementById('quiz-cards-overlay').classList.remove('show');
+                    state.isMoving = false;
+                    showBoardToken();
+                    if (state.visited.size === cityData.length) {
+                        finish(true);
+                    }
+                    updateTokenPos();
+                    if (state.autoMode) {
+                        state.autoPaused = false;
+                        if (state.autoTimer) clearTimeout(state.autoTimer);
+                        state.autoTimer = setTimeout(autoStep, 300);
+                    }
+                    updateControlButtons();
+                }
+            };
+
+            popup.classList.add('show');
         }
 
         function checkCardAnswer(cardNum, correct, selectedButton) {
@@ -5319,6 +5442,8 @@ Jika tidak ada energi yang hilang (ideal), pernyataan yang benar adalah …</div
             const cityName = cityData[questionId].name;
             const options = document.getElementById(`options-${cardNum}`);
             const correctIndex = Number(options.dataset.correctIndex);
+            const selectedLabel = selectedButton ? selectedButton.innerText : '';
+            const correctLabel = options.querySelectorAll('button')[correctIndex]?.innerText || '';
             
             // Record jawaban
             state.answers.push({
@@ -5346,35 +5471,15 @@ Jika tidak ada energi yang hilang (ideal), pernyataan yang benar adalah …</div
             } else {
                 card.style.borderColor = '#dc2626';
                 playSound(98, 0.2);
-                // lives feature removed
             }
             
-            // Jika kartu 3 dijawab, unlock kartu 4
             if (cardNum === 3) {
                 state.card3Answered = true;
-                document.getElementById('options-4').querySelectorAll('button').forEach(btn => btn.disabled = false);
             } else if (cardNum === 4) {
                 state.card4Answered = true;
-                // Setelah kedua kartu dijawab, lanjut
-                setTimeout(() => {
-                    document.getElementById('quiz-cards-overlay').classList.remove('show');
-                    state.isMoving = false;
-                    // kembalikan token papan setelah kartu selesai
-                    showBoardToken();
-                    // If finished visiting all cities, show finish
-                    if (state.visited.size === cityData.length) {
-                        finish(true);
-                    }
-                    updateTokenPos();
-                    // resume auto if it was running before quiz
-                    if (state.autoMode) {
-                        state.autoPaused = false;
-                        if (state.autoTimer) clearTimeout(state.autoTimer);
-                        state.autoTimer = setTimeout(autoStep, 300);
-                    }
-                    updateControlButtons();
-                }, 2000);
             }
+
+            showAnswerPopup(cardNum, correct, selectedLabel, correctLabel);
         }
 
         function showAdventureInstructions() {

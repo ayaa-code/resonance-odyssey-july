@@ -5437,48 +5437,53 @@ Jika tidak ada energi yang hilang (ideal), pernyataan yang benar adalah …</div
                     }
                 };
             } else {
-                // For Tier 2 (card 4): show popup, then show region summary when user continues
+                // For Tier 2 (card 4): show popup, then resume play; show final summary only if all regions visited
                 nextBtn.onclick = () => {
                     hideAnswerPopup();
-                    showRegionSummary();
+
+                    // Close quiz cards and resume
+                    document.getElementById('quiz-cards-overlay').classList.remove('show');
+                    state.isMoving = false;
+                    showBoardToken();
+                    updateTokenPos();
+                    if (state.autoMode) {
+                        state.autoPaused = false;
+                        if (state.autoTimer) clearTimeout(state.autoTimer);
+                        state.autoTimer = setTimeout(autoStep, 300);
+                    }
+                    updateControlButtons();
+
+                    // If player has visited all regions, show final congratulation summary
+                    if (state.visited.size === cityData.length) {
+                        showRegionSummary(true);
+                    }
                 };
             }
 
             popup.classList.add('show');
         }
 
-        function showRegionSummary() {
+        function showRegionSummary(isFinal = false) {
             const overlay = document.getElementById('region-complete-overlay');
             const title = document.getElementById('region-complete-title');
             const summary = document.getElementById('region-complete-summary');
             const okBtn = document.getElementById('region-complete-ok-btn');
             if (!overlay || !title || !summary || !okBtn) return;
 
-            const regionName = cityData[state.idx] ? cityData[state.idx].name : 'wilayah ini';
-            // Get last two answers related to the most recent quiz (cards 3 and 4)
-            const lastTwo = state.answers.slice(-2);
-            const correctCount = lastTwo.filter(a => a.correct).length;
-            const wrongCount = lastTwo.length - correctCount;
+            if (!isFinal) return; // do nothing for per-region; only final summary is shown
 
-            title.innerText = `SELAMAT, KAMU SELESAI: ${regionName.toUpperCase()}`;
-            summary.innerHTML = `Jawaban benar: <strong>${correctCount}</strong><br>Jawaban salah: <strong>${wrongCount}</strong><br>Terima kasih, kamu telah menyelesaikan kartu wilayah ini!`;
+            // Final summary for completing all regions
+            const correctCount = state.answers ? state.answers.filter(a => a.correct).length : 0;
+            const wrongCount = state.answers ? state.answers.filter(a => !a.correct).length : 0;
+            const total = state.answers ? state.answers.length : 0;
+
+            title.innerText = `SELAMAT, KAMU MENYELESAIKAN SEMUA WILAYAH`;
+            summary.innerHTML = `Jawaban benar: <strong>${correctCount}</strong><br>Jawaban salah: <strong>${wrongCount}</strong><br>Total soal: <strong>${total}</strong>`;
 
             okBtn.onclick = () => {
                 overlay.classList.remove('show');
-                // Close quiz overlay and resume normal flow
-                document.getElementById('quiz-cards-overlay').classList.remove('show');
-                state.isMoving = false;
-                showBoardToken();
-                if (state.visited.size === cityData.length) {
-                    finish(true);
-                }
-                updateTokenPos();
-                if (state.autoMode) {
-                    state.autoPaused = false;
-                    if (state.autoTimer) clearTimeout(state.autoTimer);
-                    state.autoTimer = setTimeout(autoStep, 300);
-                }
-                updateControlButtons();
+                // Show final end overlay
+                finish(true);
             };
 
             overlay.classList.add('show');

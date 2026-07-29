@@ -5378,14 +5378,19 @@ Jika tidak ada energi yang hilang (ideal), pernyataan yang benar adalah …</div
             const options4 = document.getElementById('options-4');
             options4.innerHTML = '';
             options4.dataset.correctIndex = card4Correct;
+            const disableTier2 = !state.card3Answered;
             card4Options.forEach((opt, idx) => {
                 const btn = document.createElement('button');
                 btn.className = 'quiz-opt-btn';
                 btn.innerText = opt;
-                btn.disabled = true;
+                btn.disabled = disableTier2;
                 btn.onclick = (event) => checkCardAnswer(4, idx === card4Correct, event.currentTarget);
                 options4.appendChild(btn);
             });
+
+            if (state.card3Answered) {
+                enableTier2Options();
+            }
 
             const overlay = document.getElementById('quiz-cards-overlay');
             overlay.classList.add('show');

@@ -4775,25 +4775,33 @@
         }
 
         function playAdventureMusic(musicUrl) {
-            // Hentikan musik adventure yang sedang dimainkan
-            stopAdventureMusic();
-            
-            // Jika ada URL musik, mainkan dengan loop otomatis
-            if (musicUrl) {
-                adventureState.adventureAudio = new Audio(musicUrl);
-                adventureState.adventureAudio.volume = 0.5;
-                
-                // Atur untuk loop otomatis ketika musik selesai
-                adventureState.adventureAudio.addEventListener('ended', function() {
-                    if (adventureState.running && adventureState.adventureAudio) {
-                        adventureState.adventureAudio.currentTime = 0;
-                        adventureState.adventureAudio.play().catch(e => console.log('Musik tidak bisa diulang:', e));
-                    }
-                }, false);
-                
-                // Mainkan musik
-                adventureState.adventureAudio.play().catch(e => console.log('Musik adventure tidak bisa diputar:', e));
+            if (!musicUrl) return;
+
+            // Jika musik perjalanan yang sedang dimainkan sama dengan musik adventure, reuse audio-nya
+            if (state.currentAudio && state.currentAudio.src === musicUrl) {
+                adventureState.adventureAudio = state.currentAudio;
+                return;
             }
+
+            // Jika musik adventure sudah sama, jangan mulai ulang
+            if (adventureState.adventureAudio && adventureState.adventureAudio.src === musicUrl) {
+                return;
+            }
+
+            // Hentikan musik adventure berbeda sebelum menampilkan musik baru
+            stopAdventureMusic();
+
+            adventureState.adventureAudio = new Audio(musicUrl);
+            adventureState.adventureAudio.volume = 0.5;
+
+            adventureState.adventureAudio.addEventListener('ended', function() {
+                if (adventureState.running && adventureState.adventureAudio) {
+                    adventureState.adventureAudio.currentTime = 0;
+                    adventureState.adventureAudio.play().catch(e => console.log('Musik tidak bisa diulang:', e));
+                }
+            }, false);
+
+            adventureState.adventureAudio.play().catch(e => console.log('Musik adventure tidak bisa diputar:', e));
         }
 
         function stopAdventureMusic() {

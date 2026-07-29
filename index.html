@@ -4804,18 +4804,9 @@
             }
         }
 
-        function stopTravelMusic() {
-            if (state.currentAudio) {
-                state.currentAudio.pause();
-                state.currentAudio.currentTime = 0;
-                state.currentAudio = null;
-            }
-        }
-
         function openAdventureOverlay() {
-            // Hentikan musik adventure dan musik perjalanan sebelum menampilkan overlay
+            // Hentikan musik adventure sebelum menampilkan overlay
             stopAdventureMusic();
-            stopTravelMusic();
             
             const overlay = document.getElementById('adventure-overlay');
             const instrument = instrumentMap[state.idx] || { name: 'Alat Musik', icon: '🎵' };

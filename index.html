@@ -5419,14 +5419,6 @@ Jika tidak ada energi yang hilang (ideal), pernyataan yang benar adalah …</div
                 ? `Jawabanmu benar. Pada ${regionName}, pilihan "${correctLabel}" sesuai dengan konsep yang ditanyakan pada ${cardLabel}.`
                 : `Jawabanmu belum tepat. Pilihan "${selectedLabel}" belum sesuai. Jawaban yang benar adalah "${correctLabel}".`;
 
-            // If this is Tier 1 (card 3), do not show a blocking popup — enable Tier 2 immediately
-            if (cardNum === 3) {
-                enableTier2Options();
-                // Provide brief inline feedback instead of modal: set card border (already set elsewhere)
-                return;
-            }
-
-            // For Tier 2 (card 4), show the popup as before and then show a region summary when player continues
             icon.innerText = correct ? '✅' : '❌';
             title.innerText = correct ? 'BENAR!' : 'SALAH!';
             title.style.color = correct ? '#22c55e' : '#dc2626';
@@ -5434,11 +5426,23 @@ Jika tidak ada energi yang hilang (ideal), pernyataan yang benar adalah …</div
             summary.style.color = correct ? '#166534' : '#991b1b';
             explanation.innerText = baseExplanation;
             nextBtn.innerText = 'LANJUT';
-            nextBtn.onclick = () => {
-                hideAnswerPopup();
-                // After Tier 2, show a per-region summary overlay (last two answers)
-                showRegionSummary();
-            };
+
+            // For Tier 1 (card 3): show popup, then enable Tier 2 when user continues
+            if (cardNum === 3) {
+                nextBtn.onclick = () => {
+                    hideAnswerPopup();
+                    const options4 = document.getElementById('options-4');
+                    if (options4) {
+                        options4.querySelectorAll('button').forEach(btn => btn.disabled = false);
+                    }
+                };
+            } else {
+                // For Tier 2 (card 4): show popup, then show region summary when user continues
+                nextBtn.onclick = () => {
+                    hideAnswerPopup();
+                    showRegionSummary();
+                };
+            }
 
             popup.classList.add('show');
         }

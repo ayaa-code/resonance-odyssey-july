@@ -4468,12 +4468,6 @@
         }
 
         function showQuiz() {
-            // Hentikan musik perjalanan saat quiz muncul
-            if (state.currentAudio) {
-                state.currentAudio.pause();
-                state.currentAudio.currentTime = 0;
-            }
-            
             state.currentQuiz = cityQuestions[state.idx];
             
             if (!state.currentQuiz) {

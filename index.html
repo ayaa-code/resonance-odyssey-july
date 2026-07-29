@@ -4804,9 +4804,18 @@
             }
         }
 
+        function stopTravelMusic() {
+            if (state.currentAudio) {
+                state.currentAudio.pause();
+                state.currentAudio.currentTime = 0;
+                state.currentAudio = null;
+            }
+        }
+
         function openAdventureOverlay() {
-            // Hentikan musik adventure sebelumnya jika ada
+            // Hentikan musik adventure dan musik perjalanan sebelum menampilkan overlay
             stopAdventureMusic();
+            stopTravelMusic();
             
             const overlay = document.getElementById('adventure-overlay');
             const instrument = instrumentMap[state.idx] || { name: 'Alat Musik', icon: '🎵' };
@@ -5483,6 +5492,12 @@ Jika tidak ada energi yang hilang (ideal), pernyataan yang benar adalah …</div
             
             if (cardNum === 3) {
                 state.card3Answered = true;
+                const options4 = document.getElementById('options-4');
+                if (options4) {
+                    options4.querySelectorAll('button').forEach(btn => {
+                        btn.disabled = false;
+                    });
+                }
             } else if (cardNum === 4) {
                 state.card4Answered = true;
             }

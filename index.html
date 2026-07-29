@@ -3827,6 +3827,15 @@
         </div>
     </div>
 
+    <!-- REGION SUMMARY OVERLAY (non-final game) -->
+    <div id="region-complete-overlay" class="answer-popup-overlay" aria-live="polite">
+        <div class="answer-popup-card">
+            <div id="region-complete-title" class="answer-popup-title">SELAMAT!</div>
+            <div id="region-complete-summary" class="answer-popup-summary"></div>
+            <button id="region-complete-ok-btn" class="btn-gold">OK</button>
+        </div>
+    </div>
+
     <!-- QUIZ OVERLAY -->
     <div id="quiz-overlay" class="screen-overlay">
         <div class="content-card">
@@ -5410,6 +5419,14 @@ Jika tidak ada energi yang hilang (ideal), pernyataan yang benar adalah …</div
                 ? `Jawabanmu benar. Pada ${regionName}, pilihan "${correctLabel}" sesuai dengan konsep yang ditanyakan pada ${cardLabel}.`
                 : `Jawabanmu belum tepat. Pilihan "${selectedLabel}" belum sesuai. Jawaban yang benar adalah "${correctLabel}".`;
 
+            // If this is Tier 1 (card 3), do not show a blocking popup — enable Tier 2 immediately
+            if (cardNum === 3) {
+                enableTier2Options();
+                // Provide brief inline feedback instead of modal: set card border (already set elsewhere)
+                return;
+            }
+
+            // For Tier 2 (card 4), show the popup as before and then show a region summary when player continues
             icon.innerText = correct ? '✅' : '❌';
             title.innerText = correct ? 'BENAR!' : 'SALAH!';
             title.style.color = correct ? '#22c55e' : '#dc2626';
@@ -5419,29 +5436,48 @@ Jika tidak ada energi yang hilang (ideal), pernyataan yang benar adalah …</div
             nextBtn.innerText = 'LANJUT';
             nextBtn.onclick = () => {
                 hideAnswerPopup();
-                if (cardNum === 3) {
-                    const options4 = document.getElementById('options-4');
-                    if (options4) {
-                        options4.querySelectorAll('button').forEach(btn => btn.disabled = false);
-                    }
-                } else {
-                    document.getElementById('quiz-cards-overlay').classList.remove('show');
-                    state.isMoving = false;
-                    showBoardToken();
-                    if (state.visited.size === cityData.length) {
-                        finish(true);
-                    }
-                    updateTokenPos();
-                    if (state.autoMode) {
-                        state.autoPaused = false;
-                        if (state.autoTimer) clearTimeout(state.autoTimer);
-                        state.autoTimer = setTimeout(autoStep, 300);
-                    }
-                    updateControlButtons();
-                }
+                // After Tier 2, show a per-region summary overlay (last two answers)
+                showRegionSummary();
             };
 
             popup.classList.add('show');
+        }
+
+        function showRegionSummary() {
+            const overlay = document.getElementById('region-complete-overlay');
+            const title = document.getElementById('region-complete-title');
+            const summary = document.getElementById('region-complete-summary');
+            const okBtn = document.getElementById('region-complete-ok-btn');
+            if (!overlay || !title || !summary || !okBtn) return;
+
+            const regionName = cityData[state.idx] ? cityData[state.idx].name : 'wilayah ini';
+            // Get last two answers related to the most recent quiz (cards 3 and 4)
+            const lastTwo = state.answers.slice(-2);
+            const correctCount = lastTwo.filter(a => a.correct).length;
+            const wrongCount = lastTwo.length - correctCount;
+
+            title.innerText = `SELAMAT, KAMU SELESAI: ${regionName.toUpperCase()}`;
+            summary.innerHTML = `Jawaban benar: <strong>${correctCount}</strong><br>Jawaban salah: <strong>${wrongCount}</strong><br>Terima kasih, kamu telah menyelesaikan kartu wilayah ini!`;
+
+            okBtn.onclick = () => {
+                overlay.classList.remove('show');
+                // Close quiz overlay and resume normal flow
+                document.getElementById('quiz-cards-overlay').classList.remove('show');
+                state.isMoving = false;
+                showBoardToken();
+                if (state.visited.size === cityData.length) {
+                    finish(true);
+                }
+                updateTokenPos();
+                if (state.autoMode) {
+                    state.autoPaused = false;
+                    if (state.autoTimer) clearTimeout(state.autoTimer);
+                    state.autoTimer = setTimeout(autoStep, 300);
+                }
+                updateControlButtons();
+            };
+
+            overlay.classList.add('show');
         }
 
         function enableTier2Options() {

@@ -5444,6 +5444,14 @@ Jika tidak ada energi yang hilang (ideal), pernyataan yang benar adalah …</div
             popup.classList.add('show');
         }
 
+        function enableTier2Options() {
+            const options4 = document.getElementById('options-4');
+            if (!options4) return;
+            options4.querySelectorAll('button').forEach(btn => {
+                btn.disabled = false;
+            });
+        }
+
         function checkCardAnswer(cardNum, correct, selectedButton) {
             const questionId = cardNum === 3 ? state.idx : ((state.idx % cityData.length) + 1);
             const cityName = cityData[questionId].name;
@@ -5482,12 +5490,7 @@ Jika tidak ada energi yang hilang (ideal), pernyataan yang benar adalah …</div
             
             if (cardNum === 3) {
                 state.card3Answered = true;
-                const options4 = document.getElementById('options-4');
-                if (options4) {
-                    options4.querySelectorAll('button').forEach(btn => {
-                        btn.disabled = false;
-                    });
-                }
+                enableTier2Options();
             } else if (cardNum === 4) {
                 state.card4Answered = true;
             }

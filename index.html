@@ -5125,9 +5125,6 @@
         }
 
         function proceedToQuiz() {
-            // Hentikan musik adventure
-            stopAdventureMusic();
-            
             // Remove event listeners if still attached
             const stage = document.getElementById('adventure-stage');
             stage.removeEventListener('mousemove', handleMouseMove);
